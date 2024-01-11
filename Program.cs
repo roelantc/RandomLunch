@@ -2,39 +2,39 @@
 
 internal abstract class Program
 {
-    static List<(string Name, bool IsHalal)> restaurants = new()
+    private static readonly List<Restaurant> Restaurants = new()
     {
-        ("The Gourmet Kitchen", false),
-        ("Seafood Delight", true),
-        ("Mountain View Bistro", false),
-        ("Urban Grill", true),
-        ("Mama's Italiano", false),
-        ("Sushi Palace", true),
-        ("Spice Junction", true),
-        ("The Vegan Spot", false),
-        ("Pancake World", true),
-        ("Taco Terrace", false)
+        new Restaurant("The Gourmet Kitchen", false, true),
+        new Restaurant("Seafood Delight", true, false),
+        new Restaurant("Mountain View Bistro", false, true),
+        // ... add other restaurants similarly
     };
- 
-    static Queue<string> history = new();
-    static string historyFilePath = "restaurant_history.txt";
- 
+
+    static readonly Queue<string> History = new();
+    private const string HistoryFilePath = "restaurant_history.txt";
+
     static void Main()
     {
         LoadHistory();
  
         while (true)
         {
-            Console.WriteLine("Do you want to include halal restaurants? (yes/no)");
-            var userChoice = Console.ReadLine()?.ToLower();
- 
-            var includeHalal = userChoice == "yes";
- 
+            Console.WriteLine("Do you want to include halal restaurants? (y/n)");
+            var halalChoice = Console.ReadLine()?.ToLower();
+            var includeHalal = halalChoice == "y";
+
+            Console.WriteLine("Do you want to include restaurants that serve beer? (y/n)");
+            var beerChoice = Console.ReadLine()?.ToLower();
+            var includeBeer = beerChoice == "y";
+
             // Filter the list based on user choice
-            var filteredRestaurants = restaurants.Where(r => includeHalal ? r.IsHalal : !r.IsHalal).ToList();
+            var filteredRestaurants = Restaurants
+                .Where(r => includeHalal ? r.IsHalal : !r.IsHalal)
+                .Where(r => includeBeer ? r.HasBeer : !r.HasBeer)
+                .ToList();
  
             // Exclude the last 3 selected restaurants
-            filteredRestaurants.RemoveAll(r => history.Contains(r.Name));
+            filteredRestaurants.RemoveAll(r => History.Contains(r.Name));
  
             // Check if there are any restaurants to choose from
             if (filteredRestaurants.Count == 0)
@@ -57,37 +57,37 @@ internal abstract class Program
                 SaveHistory();
             }
  
-            Console.WriteLine("Press any key to continue, or type 'exit' to quit.");
-            if (Console.ReadLine()?.ToLower() == "exit") break;
+            Console.WriteLine("Press any key to continue, or type 'q' to quit.");
+            if (Console.ReadLine()?.ToLower() == "q") break;
         }
     }
 
     private static void UpdateHistory(string selectedRestaurant)
     {
-        history.Enqueue(selectedRestaurant);
+        History.Enqueue(selectedRestaurant);
  
-        if (history.Count > 3)
+        if (History.Count > 3)
         {
-            history.Dequeue();
+            History.Dequeue();
         }
     }
 
     private static void SaveHistory()
     {
-        File.WriteAllLines(historyFilePath, history);
+        File.WriteAllLines(HistoryFilePath, History);
     }
 
     private static void LoadHistory()
     {
-        if (!File.Exists(historyFilePath))
+        if (!File.Exists(HistoryFilePath))
         {
             return;
         }
         
-        var savedHistory = File.ReadAllLines(historyFilePath);
+        var savedHistory = File.ReadAllLines(HistoryFilePath);
         foreach (var item in savedHistory)
         {
-            history.Enqueue(item);
+            History.Enqueue(item);
         }
     }
 }
